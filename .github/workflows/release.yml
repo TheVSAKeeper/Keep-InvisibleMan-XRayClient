@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  TUN_VERSION: v0.3.5
+  ARCHIVE_NAME: InvisibleManXRay-x64.zip
+
+jobs:
+  build-x64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag against project version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          $tag = $env:TAG.TrimStart('v')
+          $version = (Select-Xml -Path InvisibleMan-XRay/InvisibleMan-XRay.csproj -XPath '//Version').Node.InnerText
+          if ($version -ne $tag -and $version -ne "$tag.0") {
+            Write-Error "Tag v$tag does not match <Version>$version</Version> in InvisibleMan-XRay.csproj"
+            exit 1
+          }
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: XRay-Wrapper/go.mod
+          cache-dependency-path: XRay-Wrapper/go.sum
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build XRayCore.dll
+        working-directory: XRay-Wrapper
+        env:
+          CGO_ENABLED: '1'
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          go build --buildmode=c-shared -o XRayCore.dll -trimpath -ldflags "-s -w -buildid=" .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force ../InvisibleMan-XRay/Libraries | Out-Null
+          Copy-Item XRayCore.dll ../InvisibleMan-XRay/Libraries/
+
+      - name: Publish application
+        run: |
+          dotnet publish InvisibleMan-XRay/InvisibleMan-XRay.csproj -c Release -r win-x64 --self-contained true -o publish
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Assemble archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force stage/TUN, downloads | Out-Null
+          Copy-Item publish/* stage/ -Recurse -Exclude *.pdb
+          gh release download $env:TUN_VERSION -R InvisibleManVPN/InvisibleMan-TUN -p InvisibleManTUN-x64.zip -D downloads
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Expand-Archive downloads/InvisibleManTUN-x64.zip -DestinationPath stage/TUN
+          curl.exe -fsSL https://github.com/v2fly/geoip/releases/latest/download/geoip.dat -o stage/geoip.dat
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          curl.exe -fsSL https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat -o stage/geosite.dat
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Compress-Archive -Path stage/* -DestinationPath $env:ARCHIVE_NAME
+          Get-ChildItem stage -Recurse -File | ForEach-Object { $_.FullName.Substring((Resolve-Path stage).Path.Length + 1) }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: InvisibleManXRay-x64
+          path: ${{ env.ARCHIVE_NAME }}
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARCHIVE_NAME }}
