@@ -10,7 +10,6 @@ namespace InvisibleManXRay
     {
         private Func<string> getApplicationVersion;
         private Func<string> getXRayCoreVersion;
-        private Action onEmailClick;
         private Action onWebsiteClick;
         private Action onBugReportingClick;
 
@@ -24,13 +23,11 @@ namespace InvisibleManXRay
         public void Setup(
             Func<string> getApplicationVersion,
             Func<string> getXRayCoreVersion,
-            Action onEmailClick,
             Action onWebsiteClick,
             Action onBugReportingClick)
         {
             this.getApplicationVersion = getApplicationVersion;
             this.getXRayCoreVersion = getXRayCoreVersion;
-            this.onEmailClick = onEmailClick;
             this.onWebsiteClick = onWebsiteClick;
             this.onBugReportingClick = onBugReportingClick;
 
@@ -53,12 +50,6 @@ namespace InvisibleManXRay
         {
             onBugReportingClick.Invoke();
             AnalyticsService.SendEvent(new BugReportingClickedEvent());
-        }
-
-        private void OnEmailClick(object sender, RoutedEventArgs e)
-        {
-            onEmailClick.Invoke();
-            AnalyticsService.SendEvent(new EmailClickedEvent());
         }
     }
 }

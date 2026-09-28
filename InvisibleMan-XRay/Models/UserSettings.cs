@@ -97,7 +97,6 @@ namespace InvisibleManXRay.Models
             bool isRunningAtStartup,
             bool isStartHidden,
             bool isAutoConnect,
-            bool isSendingAnalytics,
             int proxyPort,
             int tunPort,
             int testPort,
@@ -115,7 +114,6 @@ namespace InvisibleManXRay.Models
             this.IsRunningAtStartup = isRunningAtStartup;
             this.IsStartHidden = isStartHidden;
             this.IsAutoConnect = isAutoConnect;
-            this.IsSendingAnalytics = isSendingAnalytics;
             this.ProxyPort = proxyPort;
             this.TunPort = tunPort;
             this.TestPort = testPort;

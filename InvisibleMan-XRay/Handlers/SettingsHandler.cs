@@ -30,7 +30,6 @@ namespace InvisibleManXRay.Handlers
             this.userSettings.IsRunningAtStartup = userSettings.IsRunningAtStartup;
             this.userSettings.IsStartHidden = userSettings.IsStartHidden;
             this.userSettings.IsAutoConnect = userSettings.IsAutoConnect;
-            this.userSettings.IsSendingAnalytics = userSettings.IsSendingAnalytics;
             this.userSettings.ProxyPort = userSettings.ProxyPort;
             this.userSettings.TunPort = userSettings.TunPort;
             this.userSettings.TestPort = userSettings.TestPort;

@@ -34,7 +34,7 @@ namespace InvisibleManXRay.Factories
 
             MainWindow mainWindow = new MainWindow();
             mainWindow.Setup(
-                isNeedToShowPolicyWindow: IsNeedToShowPolicyWindow,
+                isNewUser: IsNewUser,
                 shouldStartHidden: ShouldStartHidden,
                 isNeedToAutoConnect: IsNeedToAutoConnect,
                 getConfig: configHandler.GetCurrentConfig,
@@ -46,7 +46,6 @@ namespace InvisibleManXRay.Factories
                 openSettingsWindow: CreateSettingsWindow,
                 openUpdateWindow: CreateUpdateWindow,
                 openAboutWindow: CreateAboutWindow,
-                openPolicyWindow: CreatePolicyWindow,
                 onRunServer: core.Run,
                 onStopServer: core.Stop,
                 onCancelServer: core.Cancel,
@@ -59,7 +58,7 @@ namespace InvisibleManXRay.Factories
             
             return mainWindow;
 
-            bool IsNeedToShowPolicyWindow() => settingsHandler.UserSettings.GetClientId() == "";
+            bool IsNewUser() =>settingsHandler.UserSettings.GetClientId() == "";
 
             bool ShouldStartHidden() => settingsHandler.UserSettings.GetStartHiddenEnabled();
 
@@ -82,7 +81,6 @@ namespace InvisibleManXRay.Factories
                 getRunningAtStartupEnabled: settingsHandler.UserSettings.GetRunningAtStartupEnabled,
                 getStartHiddenEnabled: settingsHandler.UserSettings.GetStartHiddenEnabled,
                 getAutoConnectEnabled: settingsHandler.UserSettings.GetAutoConnectEnabled,
-                getSendingAnalyticsEnabled: settingsHandler.UserSettings.GetSendingAnalyticsEnabled,
                 getProxyPort: settingsHandler.UserSettings.GetProxyPort,
                 getTunPort: settingsHandler.UserSettings.GetTunPort,
                 getTestPort: settingsHandler.UserSettings.GetTestPort,
@@ -90,7 +88,6 @@ namespace InvisibleManXRay.Factories
                 getDns: settingsHandler.UserSettings.GetDns,
                 getLogLevel: settingsHandler.UserSettings.GetLogLevel,
                 getLogPath: settingsHandler.UserSettings.GetLogPath,
-                openPolicyWindow: CreatePolicyWindow,
                 onUpdateUserSettings: UpdateUserSettings
             );
 
@@ -139,7 +136,6 @@ namespace InvisibleManXRay.Factories
             aboutWindow.Setup(
                 getApplicationVersion: GetApplicationVersion,
                 getXRayCoreVersion: GetXRayCoreVersion,
-                onEmailClick: linkHandler.OpenEmailLink,
                 onWebsiteClick: linkHandler.OpenWebsiteLink,
                 onBugReportingClick: linkHandler.OpenBugReportingLink
             );
@@ -203,23 +199,6 @@ namespace InvisibleManXRay.Factories
                 mainWindow.UpdateUI();
                 mainWindow.TryRerun();
             }
-        }
-
-        public PolicyWindow CreatePolicyWindow()
-        {
-            LinkHandler linkHandler = handlersManager.GetHandler<LinkHandler>();
-
-            PolicyWindow policyWindow = new PolicyWindow();
-            policyWindow.Setup(
-                onEmailClick: linkHandler.OpenEmailLink
-            );
-
-            SetupLocalizedWindowTitle(
-                window: policyWindow,
-                term: Localization.WINDOW_TITLE_POLICY
-            );
-
-            return policyWindow;
         }
 
         private void SetupLocalizedWindowTitle(Window window, string term)

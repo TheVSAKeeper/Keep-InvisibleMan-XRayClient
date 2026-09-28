@@ -44,7 +44,6 @@ namespace InvisibleManXRay
         private Func<bool> getRunningAtStartupEnabled;
         private Func<bool> getStartHiddenEnabled;
         private Func<bool> getAutoConnectEnabled;
-        private Func<bool> getSendingAnalyticsEnabled;
         private Func<int> getProxyPort;
         private Func<int> getTunPort;
         private Func<int> getTestPort;
@@ -52,7 +51,6 @@ namespace InvisibleManXRay
         private Func<String> getDns;
         private Func<LogLevel> getLogLevel;
         private Func<string> getLogPath;
-        private Func<PolicyWindow> openPolicyWindow;
 
         private Action<UserSettings> onUpdateUserSettings;
 
@@ -89,7 +87,6 @@ namespace InvisibleManXRay
             Func<bool> getRunningAtStartupEnabled,
             Func<bool> getStartHiddenEnabled,
             Func<bool> getAutoConnectEnabled,
-            Func<bool> getSendingAnalyticsEnabled,
             Func<int> getProxyPort,
             Func<int> getTunPort,
             Func<int> getTestPort,
@@ -97,7 +94,6 @@ namespace InvisibleManXRay
             Func<string> getDns,
             Func<LogLevel> getLogLevel,
             Func<string> getLogPath,
-            Func<PolicyWindow> openPolicyWindow,
             Action<UserSettings> onUpdateUserSettings
         )
         {
@@ -109,7 +105,6 @@ namespace InvisibleManXRay
             this.getRunningAtStartupEnabled = getRunningAtStartupEnabled;
             this.getStartHiddenEnabled = getStartHiddenEnabled;
             this.getAutoConnectEnabled = getAutoConnectEnabled;
-            this.getSendingAnalyticsEnabled = getSendingAnalyticsEnabled;
             this.getProxyPort = getProxyPort;
             this.getTunPort = getTunPort;
             this.getTestPort = getTestPort;
@@ -117,7 +112,6 @@ namespace InvisibleManXRay
             this.getDns = getDns;
             this.getLogLevel = getLogLevel;
             this.getLogPath = getLogPath;
-            this.openPolicyWindow = openPolicyWindow;
             this.onUpdateUserSettings = onUpdateUserSettings;
 
             UpdateUI();
@@ -140,7 +134,6 @@ namespace InvisibleManXRay
                 checkBoxRunAtStartup.IsChecked = getRunningAtStartupEnabled.Invoke();
                 checkBoxStartHidden.IsChecked = getStartHiddenEnabled.Invoke();
                 checkBoxAutoConnect.IsChecked = getAutoConnectEnabled.Invoke();
-                checkBoxSendAnalytics.IsChecked = getSendingAnalyticsEnabled.Invoke();
             }
 
             void UpdatePortPanelUI()
@@ -213,13 +206,6 @@ namespace InvisibleManXRay
             }
         }
 
-        private void OnAnalyticsClick(object sender, RoutedEventArgs e)
-        {
-            PolicyWindow policyWindow = openPolicyWindow.Invoke();
-            policyWindow.Owner = this;
-            policyWindow.ShowDialog();
-        }
-
         private void OnConfirmButtonClick(object sender, RoutedEventArgs e)
         {
             UserSettings userSettings = new UserSettings(
@@ -232,7 +218,6 @@ namespace InvisibleManXRay
                 isRunningAtStartup: checkBoxRunAtStartup.IsChecked.Value,
                 isStartHidden: checkBoxStartHidden.IsChecked.Value,
                 isAutoConnect: checkBoxAutoConnect.IsChecked.Value,
-                isSendingAnalytics: checkBoxSendAnalytics.IsChecked.Value,
                 proxyPort: int.Parse(textBoxProxyPort.Text),
                 tunPort: int.Parse(textBoxTunPort.Text),
                 testPort: int.Parse(textBoxTestPort.Text),
@@ -242,7 +227,6 @@ namespace InvisibleManXRay
             );
             
             SendRunAtStartupActivationEvent();
-            ForceSendAnalyticsActivationEvent();
             onUpdateUserSettings.Invoke(userSettings);
 
             Close();
@@ -260,22 +244,6 @@ namespace InvisibleManXRay
                 bool IsUserChangeRunningAtStartupSetting()
                 {
                     return getRunningAtStartupEnabled.Invoke() != checkBoxRunAtStartup.IsChecked.Value;
-                }
-            }
-
-            void ForceSendAnalyticsActivationEvent()
-            {
-                if (!IsUserChangeSendingAnalyticsEnabledSetting())
-                    return;
-
-                if (userSettings.GetSendingAnalyticsEnabled())
-                    AnalyticsService.SendEvent(new AnalyticsActivatedEvent(), true);
-                else
-                    AnalyticsService.SendEvent(new AnalyticsDeactivatedEvent(), true);
-
-                bool IsUserChangeSendingAnalyticsEnabledSetting()
-                {
-                    return getSendingAnalyticsEnabled.Invoke() != checkBoxSendAnalytics.IsChecked.Value;
                 }
             }
         }

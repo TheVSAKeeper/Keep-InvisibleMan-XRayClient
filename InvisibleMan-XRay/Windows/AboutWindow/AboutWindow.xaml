@@ -51,7 +51,7 @@
                     <Run Text="{DynamicResource Lang.Window.About.VisitWebsite}" />
                 </TextBlock>
 
-                <TextBlock Grid.Row="2" Text="https://invisiblemanvpn.github.io" 
+                <TextBlock Grid.Row="2" Text="Keep-InvisibleMan-XRayClient"
                     FontFamily="{StaticResource SegoeUI}" TextDecorations="Underline"
                     HorizontalAlignment="Center" VerticalAlignment="Top" 
                     Margin="20 10 20 20" Foreground="{StaticResource Color.Blue}" 
@@ -69,20 +69,7 @@
                     <Run Text="{DynamicResource Lang.Window.About.SubmitIssuePart3}" />
                 </TextBlock>
 
-                <TextBlock Padding="20 20 20 0" TextAlignment="Justify" TextWrapping="Wrap" FontFamily="{StaticResource SegoeUI}" 
-                    FontWeight="Light" LineHeight="15" FontSize="15" Foreground="White">
-                    
-                    <Run Text="{DynamicResource Lang.Window.About.ContactUs}" />
-                </TextBlock>
-
-                <TextBlock Grid.Row="2" Text="invisiblemanvpn@gmail.com" 
-                    FontFamily="{StaticResource SegoeUI}" TextDecorations="Underline"
-                    HorizontalAlignment="Center" VerticalAlignment="Top" 
-                    Margin="20 10 20 20" Foreground="{StaticResource Color.Blue}" 
-                    FontWeight="Normal" FontSize="15" Cursor="Hand"
-                    PreviewMouseDown="OnEmailClick"/>
-
-                <TextBlock Padding="20 0 20 20" TextAlignment="Justify" TextWrapping="Wrap" FontFamily="{StaticResource SegoeUI}" 
+                <TextBlock Padding="20 20 20 20" TextAlignment="Justify" TextWrapping="Wrap" FontFamily="{StaticResource SegoeUI}" 
                     FontWeight="Light" LineHeight="15" FontSize="15" Foreground="White">
                     
                     <Run Text="{DynamicResource Lang.Window.About.Thanks}" />

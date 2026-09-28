@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.ComponentModel;
 
@@ -14,7 +14,7 @@ namespace InvisibleManXRay
     {
         private bool isRerunRequest;
 
-        private Func<bool> isNeedToShowPolicyWindow;
+        private Func<bool> isNewUser;
         private Func<bool> shouldStartHidden;
         private Func<bool> isNeedToAutoConnect;
         private Func<Config> getConfig;
@@ -26,7 +26,6 @@ namespace InvisibleManXRay
         private Func<SettingsWindow> openSettingsWindow;
         private Func<UpdateWindow> openUpdateWindow;
         private Func<AboutWindow> openAboutWindow;
-        private Func<PolicyWindow> openPolicyWindow;
         private Action<string> onRunServer;
         private Action onCancelServer;
         private Action onStopServer;
@@ -213,7 +212,7 @@ namespace InvisibleManXRay
         }
 
         public void Setup(
-            Func<bool> isNeedToShowPolicyWindow,
+            Func<bool> isNewUser,
             Func<bool> shouldStartHidden,
             Func<bool> isNeedToAutoConnect,
             Func<Config> getConfig,
@@ -225,7 +224,6 @@ namespace InvisibleManXRay
             Func<SettingsWindow> openSettingsWindow,
             Func<UpdateWindow> openUpdateWindow,
             Func<AboutWindow> openAboutWindow,
-            Func<PolicyWindow> openPolicyWindow,
             Action<string> onRunServer,
             Action onStopServer,
             Action onCancelServer,
@@ -235,7 +233,7 @@ namespace InvisibleManXRay
             Action onBugReportingClick,
             Action<string> onCustomLinkClick)
         {
-            this.isNeedToShowPolicyWindow = isNeedToShowPolicyWindow;
+            this.isNewUser = isNewUser;
             this.shouldStartHidden = shouldStartHidden;
             this.isNeedToAutoConnect = isNeedToAutoConnect;
             this.getConfig = getConfig;
@@ -246,7 +244,6 @@ namespace InvisibleManXRay
             this.openSettingsWindow = openSettingsWindow;
             this.openUpdateWindow = openUpdateWindow;
             this.openAboutWindow = openAboutWindow;
-            this.openPolicyWindow = openPolicyWindow;
             this.onRunServer = onRunServer;
             this.onCancelServer = onCancelServer;
             this.onStopServer = onStopServer;
@@ -262,7 +259,7 @@ namespace InvisibleManXRay
 
         protected override void OnContentRendered(EventArgs e)
         {
-            TryOpenPolicyWindow();
+            TryRegisterNewUser();
             TryStartHidden();
             TryAutoConnect();
 
@@ -383,17 +380,13 @@ namespace InvisibleManXRay
             OnRunButtonClick(null, null);
         }
 
-        private void TryOpenPolicyWindow()
+        private void TryRegisterNewUser()
         {
-            if (!isNeedToShowPolicyWindow.Invoke())
+            if (!isNewUser.Invoke())
                 return;
 
             onGenerateClientId.Invoke();
             AnalyticsService.SendEvent(new NewUserEvent());
-
-            PolicyWindow policyWindow = openPolicyWindow.Invoke();
-            policyWindow.Owner = this;
-            policyWindow.ShowDialog();
         }
 
         private void OpenServerWindow()

@@ -8,8 +8,6 @@ namespace InvisibleManXRay.Handlers
     {
         public void OpenWebsiteLink() => OpenLink(Route.WEBSITE);
 
-        public void OpenEmailLink() => OpenLink(Route.EMAIL);
-
         public void OpenGitHubRepositoryLink() => OpenLink(Route.REPOSITORY);
 
         public void OpenBugReportingLink() => OpenLink(Route.ISSUES);

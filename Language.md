@@ -8,11 +8,7 @@ By doing these steps you can add your language to the app:
 
 - Clone a copy of the repository:
     ```
-    git clone "https://github.com/InvisibleManVPN/InvisibleMan-XRayClient.git"
-    ```
-- Switch to the `develop` branch:
-    ```
-    git checkout develop
+    git clone "https://github.com/TheVSAKeeper/Keep-InvisibleMan-XRayClient.git"
     ```
 - Go to the `InvisibleMan-XRay/Assets/Localization` and duplicate the `en-US.xaml`.
 - Rename the duplicated file to your language.
