@@ -11,11 +11,20 @@ permissions:
 
 env:
   TUN_VERSION: v0.3.5
-  ARCHIVE_NAME: InvisibleManXRay-x64.zip
 
 jobs:
-  build-x64:
+  build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            goarch: amd64
+          - arch: x86
+            goarch: '386'
+    env:
+      ARCHIVE_NAME: InvisibleManXRay-${{ matrix.arch }}.zip
     defaults:
       run:
         shell: pwsh
@@ -43,12 +52,29 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - uses: msys2/setup-msys2@v2
+        if: matrix.arch == 'x86'
+        id: msys2
+        with:
+          msystem: MINGW32
+          update: false
+          install: mingw-w64-i686-gcc
+
+      - name: Use 32-bit MinGW
+        if: matrix.arch == 'x86'
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+        run: |
+          $bin = Join-Path $env:MSYS2_LOCATION 'mingw32\bin'
+          $bin >> $env:GITHUB_PATH
+          "CC=$(Join-Path $bin 'gcc.exe')" >> $env:GITHUB_ENV
+
       - name: Build XRayCore.dll
         working-directory: XRay-Wrapper
         env:
           CGO_ENABLED: '1'
           GOOS: windows
-          GOARCH: amd64
+          GOARCH: ${{ matrix.goarch }}
         run: |
           go build --buildmode=c-shared -o XRayCore.dll -trimpath -ldflags "-s -w -buildid=" .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -56,19 +82,22 @@ jobs:
           Copy-Item XRayCore.dll ../InvisibleMan-XRay/Libraries/
 
       - name: Publish application
+        env:
+          RID: win-${{ matrix.arch }}
         run: |
-          dotnet publish InvisibleMan-XRay/InvisibleMan-XRay.csproj -c Release -r win-x64 --self-contained true -o publish
+          dotnet publish InvisibleMan-XRay/InvisibleMan-XRay.csproj -c Release -r $env:RID --self-contained true -o publish
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Assemble archive
         env:
           GH_TOKEN: ${{ github.token }}
+          TUN_ARCHIVE: InvisibleManTUN-${{ matrix.arch }}.zip
         run: |
           New-Item -ItemType Directory -Force stage/TUN, downloads | Out-Null
           Copy-Item publish/* stage/ -Recurse -Exclude *.pdb
-          gh release download $env:TUN_VERSION -R InvisibleManVPN/InvisibleMan-TUN -p InvisibleManTUN-x64.zip -D downloads
+          gh release download $env:TUN_VERSION -R InvisibleManVPN/InvisibleMan-TUN -p $env:TUN_ARCHIVE -D downloads
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Expand-Archive downloads/InvisibleManTUN-x64.zip -DestinationPath stage/TUN
+          Expand-Archive downloads/$env:TUN_ARCHIVE -DestinationPath stage/TUN
           curl.exe -fsSL https://github.com/v2fly/geoip/releases/latest/download/geoip.dat -o stage/geoip.dat
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           curl.exe -fsSL https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat -o stage/geosite.dat
@@ -78,11 +107,33 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: InvisibleManXRay-x64
+          name: InvisibleManXRay-${{ matrix.arch }}
           path: ${{ env.ARCHIVE_NAME }}
 
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: InvisibleManXRay-*
+          path: dist
+          merge-multiple: true
+
+      - name: Pick release notes
+        id: notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          notes=".github/release-notes/$TAG.md"
+          if [ -f "$notes" ]; then echo "path=$notes" >> "$GITHUB_OUTPUT"; fi
+
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.ARCHIVE_NAME }}
+          name: InvisibleMan-XRay ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.path }}
+          files: dist/*.zip
