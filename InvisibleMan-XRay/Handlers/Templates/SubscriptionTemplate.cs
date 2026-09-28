@@ -45,8 +45,18 @@ namespace InvisibleManXRay.Handlers.Templates
             Status fetchingStatus = template.FetchDataFromLink(link);
             if (fetchingStatus.Code == Code.ERROR)
                 return fetchingStatus;
-            
-            List<string[]> v2RayList = template.ConvertToV2RayList(convertConfigLinkToV2Ray);
+
+            bool isAnyTransportUnsupported = false;
+            bool isAnyCertificateCheckKept = false;
+
+            List<string[]> v2RayList = template.ConvertToV2RayList(ConvertConfigLink);
+            if (Isv2RayListEmpty() && isAnyTransportUnsupported)
+                return new Status(
+                    code: Code.ERROR,
+                    subCode: SubCode.UNSUPPORTED_TRANSPORT,
+                    content: LocalizationService.GetTerm(Localization.SUBSCRIPTION_UNSUPPORTED_TRANSPORT)
+                );
+
             if(Isv2RayListEmpty())
                 return new Status(
                     code: Code.ERROR,
@@ -57,11 +67,43 @@ namespace InvisibleManXRay.Handlers.Templates
             return new Status(
                 code: Code.SUCCESS,
                 subCode: SubCode.SUCCESS,
-                content: new string[] { 
-                    template.GetValidRemark(remark), 
-                    JsonConvert.SerializeObject(v2RayList) 
+                content: new string[] {
+                    template.GetValidRemark(remark),
+                    JsonConvert.SerializeObject(v2RayList),
+                    GetWarning()
                 }
             );
+
+            Status ConvertConfigLink(string configLink)
+            {
+                Status convertingStatus = convertConfigLinkToV2Ray.Invoke(configLink);
+
+                if (convertingStatus.SubCode == SubCode.UNSUPPORTED_TRANSPORT)
+                    isAnyTransportUnsupported = true;
+                else if (convertingStatus.Code == Code.SUCCESS && HasWarning(convertingStatus))
+                    isAnyCertificateCheckKept = true;
+
+                return convertingStatus;
+
+                bool HasWarning(Status configStatus)
+                {
+                    string[] config = (string[])configStatus.Content;
+                    return config.Length > 2 && !string.IsNullOrEmpty(config[2]);
+                }
+            }
+
+            string GetWarning()
+            {
+                List<string> warnings = new List<string>();
+
+                if (isAnyTransportUnsupported)
+                    warnings.Add(LocalizationService.GetTerm(Localization.SUBSCRIPTION_UNSUPPORTED_TRANSPORT));
+
+                if (isAnyCertificateCheckKept)
+                    warnings.Add(LocalizationService.GetTerm(Localization.SUBSCRIPTION_CERTIFICATE_CHECK_KEPT));
+
+                return warnings.Count > 0 ? string.Join("\n\n", warnings) : null;
+            }
 
             Template FindTemplate()
             {

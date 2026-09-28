@@ -81,6 +81,15 @@ namespace InvisibleManXRay.Models.Templates.Configs
                 public string domainStrategy;
                 public int userLevel;
 
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public int? version;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public string address;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public int? port;
+
                 public class Vnext
                 {
                     public string address;
@@ -145,12 +154,30 @@ namespace InvisibleManXRay.Models.Templates.Configs
             public GrpcSettings grpcSettings;
             public RealitySettings realitySettings;
 
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public XhttpSettings xhttpSettings;
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public HysteriaSettings hysteriaSettings;
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public FinalMask finalmask;
+
             public class TlsSettings
             {
                 public bool allowInsecure;
                 public string serverName;
                 public string[] alpn;
                 public string fingerprint;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public string pinnedPeerCertSha256;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public string verifyPeerCertByName;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public string echConfigList;
             }
 
             public class TcpSettings
@@ -216,6 +243,43 @@ namespace InvisibleManXRay.Models.Templates.Configs
                 public string publicKey;
                 public string shortId;
                 public string spiderX;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public string mldsa65Verify;
+            }
+
+            public class XhttpSettings
+            {
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public string host;
+
+                public string path;
+                public string mode;
+
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public object extra;
+            }
+
+            public class HysteriaSettings
+            {
+                public int version;
+                public string auth;
+            }
+
+            public class FinalMask
+            {
+                public Mask[] udp;
+
+                public class Mask
+                {
+                    public string type;
+                    public MaskSettings settings;
+
+                    public class MaskSettings
+                    {
+                        public string password;
+                    }
+                }
             }
         }
 

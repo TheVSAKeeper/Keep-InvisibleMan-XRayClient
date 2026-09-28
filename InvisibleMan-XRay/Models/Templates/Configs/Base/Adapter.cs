@@ -19,9 +19,17 @@ namespace InvisibleManXRay.Models.Templates.Configs
         public string sni;
         public string alpn;
         public bool allowInsecure;
+        public string pinnedPeerCertSha256;
+        public string verifyPeerCertByName;
+        public string echConfigList;
         public string fingerprint;
         public string publicKey;
         public string shortId;
         public string spiderX;
+        public string mldsa65Verify;
+        public string mode;
+        public string extra;
+        public string obfs;
+        public string obfsPassword;
     }
 }

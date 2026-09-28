@@ -212,6 +212,9 @@ namespace InvisibleManXRay
                 ClearSubscriptionPath();
                 ShowServersPanel();
 
+                if (!string.IsNullOrEmpty(GetSubscriptionWarning()))
+                    HandleWarningMessage(GetSubscriptionWarning());
+
                 string[] GetSubscription() => (string[])subscriptionStatus.Content;
 
                 string GetSubscriptionUrl() => textBoxSubscriptionLink.Text;
@@ -220,12 +223,15 @@ namespace InvisibleManXRay
 
                 string GetSubscriptionData() => subscription[1];
 
+                string GetSubscriptionWarning() => subscription.Length > 2 ? subscription[2] : null;
+
                 void HandleError()
                 {
                     switch (subscriptionStatus.SubCode)
                     {
                         case SubCode.NO_CONFIG:
                         case SubCode.UNSUPPORTED_LINK:
+                        case SubCode.UNSUPPORTED_TRANSPORT:
                             HandleWarningMessage(subscriptionStatus.Content.ToString());
                             break;
                         case SubCode.INVALID_CONFIG:

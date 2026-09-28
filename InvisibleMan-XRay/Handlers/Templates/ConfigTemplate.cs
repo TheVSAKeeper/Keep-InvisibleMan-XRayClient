@@ -27,6 +27,8 @@ namespace InvisibleManXRay.Handlers.Templates
             templates.Add("vless", typeof(Vless));
             templates.Add("trojan", typeof(Trojan));
             templates.Add("ss", typeof(Shadowsocks));
+            templates.Add("hysteria2", typeof(Hysteria2));
+            templates.Add("hy2", typeof(Hysteria2));
         }
 
         public Status ConverLinkToConfig(string link)
@@ -43,13 +45,18 @@ namespace InvisibleManXRay.Handlers.Templates
             if (fetchingStatus.Code == Code.ERROR)
                 return fetchingStatus;
 
+            Status validationStatus = template.ValidateStream();
+            if (validationStatus.Code == Code.ERROR)
+                return validationStatus;
+
             V2Ray v2Ray = template.ConvertToV2Ray();
             string remark = template.GetValidRemark();
+            string warning = validationStatus.Content as string;
 
             return new Status(
                 code: Code.SUCCESS,
                 subCode: SubCode.SUCCESS,
-                content: new string[] { remark, JsonConvert.SerializeObject(v2Ray) }
+                content: new string[] { remark, JsonConvert.SerializeObject(v2Ray), warning }
             );
 
             string FetchConfigType() => link.Split("://").First();

@@ -16,6 +16,10 @@ namespace InvisibleManXRay.Values
         public const string NO_SERVER_CONFIGURATION = "Lang.Message.NoServerConfiguration";
         public const string UNSUPPORTED_CONFIG_LINK = "Lang.Message.UnsopportedConfigLink";
         public const string UNSUPPORTED_SUBSCRIPTION_LINK = "Lang.Message.UnsopportedSubscriptionLink";
+        public const string UNSUPPORTED_TRANSPORT = "Lang.Message.UnsupportedTransport";
+        public const string CERTIFICATE_CHECK_KEPT = "Lang.Message.CertificateCheckKept";
+        public const string SUBSCRIPTION_UNSUPPORTED_TRANSPORT = "Lang.Message.SubscriptionUnsupportedTransport";
+        public const string SUBSCRIPTION_CERTIFICATE_CHECK_KEPT = "Lang.Message.SubscriptionCertificateCheckKept";
         public const string WAITING_FOR_SERVER_RESPONSE = "Lang.Message.WaitingForServerResponse";
         public const string UPDATE_AVAILABLE = "Lang.Message.UpdateAvailable";
         public const string YOU_HAVE_LATEST_VERSION = "Lang.Message.YouHaveLatestVersion";

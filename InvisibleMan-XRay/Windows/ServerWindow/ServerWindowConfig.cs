@@ -158,6 +158,7 @@ namespace InvisibleManXRay
             void TryAddConfig(ConfigType type)
             {
                 Status configStatus;
+                string warning = null;
 
                 if (type == ConfigType.FILE)
                 {
@@ -183,14 +184,17 @@ namespace InvisibleManXRay
 
                     string[] config = GetConfig();
                     onCreateConfig.Invoke(GetConfigRemark(), GetConfigData());
+                    warning = GetConfigWarning();
 
                     string[] GetConfig() => (string[])configStatus.Content;
 
                     string GetConfigRemark() => config[0];
 
                     string GetConfigData() => config[1];
+
+                    string GetConfigWarning() => config.Length > 2 ? config[2] : null;
                 }
-                
+
                 groupPath = GetLastConfigPath(GroupType.GENERAL);
                 onUpdateConfig.Invoke(GetLastConfigPath(GroupType.GENERAL));
                 SetActiveLoadingPanel(false);
@@ -199,12 +203,16 @@ namespace InvisibleManXRay
                 ClearConfigLink();
                 ShowServersPanel();
 
+                if (!string.IsNullOrEmpty(warning))
+                    HandleWarningMessage(warning);
+
                 void HandleError()
                 {
                     switch (configStatus.SubCode)
                     {
                         case SubCode.NO_CONFIG:
                         case SubCode.UNSUPPORTED_LINK:
+                        case SubCode.UNSUPPORTED_TRANSPORT:
                             HandleWarningMessage(configStatus.Content.ToString());
                             break;
                         case SubCode.INVALID_CONFIG:

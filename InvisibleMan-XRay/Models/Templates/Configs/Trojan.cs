@@ -1,9 +1,11 @@
 using System;
 using System.Web;
 using System.Collections.Specialized;
+using Newtonsoft.Json.Linq;
 
 namespace InvisibleManXRay.Models.Templates.Configs
 {
+    using Utilities;
     using Values;
 
     public class Trojan : Template
@@ -26,7 +28,7 @@ namespace InvisibleManXRay.Models.Templates.Configs
         {
             data = new Data(link);
 
-            if (IsInvalidLink())
+            if (IsInvalidLink() || IsInvalidExtra())
                 return new Status(
                     code: Code.ERROR,
                     subCode: SubCode.INVALID_CONFIG,
@@ -36,6 +38,14 @@ namespace InvisibleManXRay.Models.Templates.Configs
             return new Status(Code.SUCCESS, SubCode.SUCCESS, null);
 
             bool IsInvalidLink() => data.query.Count == 0;
+
+            bool IsInvalidExtra()
+            {
+                string extra = data.query["extra"];
+                return data.query["type"] is "xhttp" or "splithttp"
+                    && !string.IsNullOrWhiteSpace(extra)
+                    && JsonUtility.ConvertFromJson<JObject>(extra) == null;
+            }
         }
 
         protected override Adapter Adapter
@@ -55,6 +65,9 @@ namespace InvisibleManXRay.Models.Templates.Configs
                     sni = data.query["sni"] ?? "",
                     alpn = HttpUtility.UrlDecode(data.query["alpn"] ?? ""),
                     allowInsecure = HttpUtility.UrlDecode(data.query["allowInsecure"] ?? "") == "1" ? true : false,
+                    pinnedPeerCertSha256 = data.query["pcs"] ?? "",
+                    verifyPeerCertByName = data.query["vcn"] ?? "",
+                    echConfigList = data.query["ech"] ?? "",
                     fingerprint = HttpUtility.UrlDecode(data.query["fp"] ?? "")
                 };
 
@@ -87,6 +100,14 @@ namespace InvisibleManXRay.Models.Templates.Configs
                         adapter.path = HttpUtility.UrlDecode(data.query["serviceName"] ?? "");
                         adapter.headerType = HttpUtility.UrlDecode(data.query["mode"] ?? "gun");
                         break;
+                    case "xhttp":
+                    case "splithttp":
+                        adapter.streamNetwork = Global.StreamNetwork.XHTTP;
+                        adapter.requestHost = HttpUtility.UrlDecode(data.query["host"] ?? "");
+                        adapter.path = HttpUtility.UrlDecode(data.query["path"] ?? "/");
+                        adapter.mode = HttpUtility.UrlDecode(data.query["mode"] ?? "auto");
+                        adapter.extra = data.query["extra"] ?? "";
+                        break;
                     default:
                         break;
                 }
@@ -99,14 +120,6 @@ namespace InvisibleManXRay.Models.Templates.Configs
         {
             get
             {
-                if (Adapter.streamSecurity == Global.StreamSecurity.XTLS)
-                {
-                    if (string.IsNullOrEmpty(Adapter.flow))
-                        Adapter.flow = "xtls-rprx-origin";
-                    else
-                        Adapter.flow = Adapter.flow.Replace("splice", "direct");
-                }
-
                 return new V2Ray.Outbound.Settings() {
                     servers = new V2Ray.Outbound.Settings.Server[] {
                         new V2Ray.Outbound.Settings.Server() {
@@ -115,21 +128,10 @@ namespace InvisibleManXRay.Models.Templates.Configs
                             password = Adapter.id,
                             ota = false,
                             level = 1,
-                            flow = SetServerFlow()
+                            flow = string.Empty
                         }
                     }
                 };
-
-                string SetServerFlow()
-                {
-                    if (Adapter.streamSecurity != "xtls")
-                        return string.Empty;
-                    
-                    if (string.IsNullOrEmpty(Adapter.flow))
-                        return "xtls-rprx-origin";
-                    
-                    return Adapter.flow.Replace("splice", "direct");
-                }
             }
         }
     }

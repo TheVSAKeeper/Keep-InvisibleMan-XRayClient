@@ -146,5 +146,9 @@
     <system:String x:Key="Lang.Message.FileDoesntExists" xml:space="preserve">This file doesn't exists.&#10;Maybe it has been deleted.</system:String>
     <system:String x:Key="Lang.Message.UnsopportedConfigLink" xml:space="preserve">This link wasn't supported.&#10;Try another configuration link.</system:String>
     <system:String x:Key="Lang.Message.UnsopportedSubscriptionLink" xml:space="preserve">This link wasn't supported.&#10;Try another subscription link.</system:String>
+    <system:String x:Key="Lang.Message.UnsupportedTransport" xml:space="preserve">This link uses a connection type that is no longer supported.&#10;Ask your server provider for a new link.</system:String>
+    <system:String x:Key="Lang.Message.CertificateCheckKept" xml:space="preserve">This link asks to skip the server certificate check, but this version can't do that anymore – the check stays on.&#10;If you can't connect, ask your server provider for a new link.</system:String>
+    <system:String x:Key="Lang.Message.SubscriptionUnsupportedTransport" xml:space="preserve">Some servers in this subscription use a connection type that is no longer supported – they were not added.&#10;Ask your subscription provider to update the links.</system:String>
+    <system:String x:Key="Lang.Message.SubscriptionCertificateCheckKept" xml:space="preserve">Some servers in this subscription ask to skip the certificate check, but this version can't do that anymore – the check stays on.&#10;If you can't connect to them, ask your subscription provider to update the links.</system:String>
     <system:String x:Key="Lang.Message.NoLogFile" xml:space="preserve">There is no log file for this config.&#10;You can manage the log files from the settings menu.</system:String>
 </ResourceDictionary>

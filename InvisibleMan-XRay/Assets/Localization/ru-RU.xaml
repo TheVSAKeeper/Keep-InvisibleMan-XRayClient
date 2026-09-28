@@ -146,5 +146,9 @@
     <system:String x:Key="Lang.Message.FileDoesntExists" xml:space="preserve">Этот файл не существует.&#10;Возможно, он был удален.</system:String>
     <system:String x:Key="Lang.Message.UnsopportedConfigLink" xml:space="preserve">Эта ссылка не поддерживается.&#10;Попробуйте другую ссылку на конфигурацию.</system:String>
     <system:String x:Key="Lang.Message.UnsopportedSubscriptionLink" xml:space="preserve">Эта ссылка не поддерживается.&#10;Попробуйте другую ссылку на подписку.</system:String>
+    <system:String x:Key="Lang.Message.UnsupportedTransport" xml:space="preserve">Эта ссылка использует способ подключения, который больше не поддерживается.&#10;Попросите у поставщика сервера новую ссылку.</system:String>
+    <system:String x:Key="Lang.Message.CertificateCheckKept" xml:space="preserve">Ссылка просит не проверять сертификат сервера, но эта версия так больше не умеет – проверка оставлена включенной.&#10;Если подключиться не получится, попросите у поставщика сервера новую ссылку.</system:String>
+    <system:String x:Key="Lang.Message.SubscriptionUnsupportedTransport" xml:space="preserve">Часть серверов подписки использует способ подключения, который больше не поддерживается, – они не добавлены.&#10;Попросите у поставщика подписки обновить ссылки.</system:String>
+    <system:String x:Key="Lang.Message.SubscriptionCertificateCheckKept" xml:space="preserve">Часть серверов подписки просит не проверять сертификат, но эта версия так больше не умеет – проверка оставлена включенной.&#10;Если к ним подключиться не получится, попросите у поставщика подписки обновить ссылки.</system:String>
     <system:String x:Key="Lang.Message.NoLogFile" xml:space="preserve">Файл лога для этой конфигурации отсутствует.&#10;Вы можете управлять логами через меню настроек.</system:String>
 </ResourceDictionary>

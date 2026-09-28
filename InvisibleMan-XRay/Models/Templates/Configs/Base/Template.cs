@@ -1,3 +1,6 @@
+using System.Linq;
+using Newtonsoft.Json.Linq;
+
 namespace InvisibleManXRay.Models.Templates.Configs
 {
     using Services;
@@ -7,15 +10,61 @@ namespace InvisibleManXRay.Models.Templates.Configs
     public abstract class Template
     {
         private V2Ray v2Ray;
+        private readonly string[] removedNetworks = new[] {
+            Global.StreamNetwork.H2,
+            "h3",
+            "http",
+            Global.StreamNetwork.QUIC
+        };
+
         protected abstract Adapter Adapter { get; }
         protected abstract V2Ray.Outbound.Settings OutboundSettings { get; }
 
         protected LocalizationService LocalizationService => ServiceLocator.Get<LocalizationService>();
-        
+
         public abstract Status FetchDataFromLink(string link);
 
         public string GetValidRemark() => FileUtility.GetValidFileName(Adapter.remark);
-        
+
+        public Status ValidateStream()
+        {
+            Adapter adapter = Adapter;
+
+            if (IsRemovedNetwork() || IsObfuscatedKcp() || IsLegacyXtls())
+                return new Status(
+                    code: Code.ERROR,
+                    subCode: SubCode.UNSUPPORTED_TRANSPORT,
+                    content: LocalizationService.GetTerm(Localization.UNSUPPORTED_TRANSPORT)
+                );
+
+            if (IsInsecureWithoutPinning())
+                return new Status(
+                    code: Code.SUCCESS,
+                    subCode: SubCode.SUCCESS,
+                    content: LocalizationService.GetTerm(Localization.CERTIFICATE_CHECK_KEPT)
+                );
+
+            return new Status(Code.SUCCESS, SubCode.SUCCESS, null);
+
+            bool IsRemovedNetwork() => removedNetworks.Contains(adapter.streamNetwork);
+
+            bool IsObfuscatedKcp()
+            {
+                return adapter.streamNetwork == Global.StreamNetwork.KCP
+                    && ((!string.IsNullOrEmpty(adapter.headerType) && adapter.headerType != "none")
+                    || !string.IsNullOrEmpty(adapter.path));
+            }
+
+            bool IsLegacyXtls() => adapter.streamSecurity == Global.StreamSecurity.XTLS;
+
+            bool IsInsecureWithoutPinning()
+            {
+                return adapter.allowInsecure
+                    && string.IsNullOrEmpty(adapter.pinnedPeerCertSha256)
+                    && string.IsNullOrEmpty(adapter.verifyPeerCertByName);
+            }
+        }
+
         public V2Ray ConvertToV2Ray()
         {
             v2Ray = new V2Ray() {
@@ -52,13 +101,13 @@ namespace InvisibleManXRay.Models.Templates.Configs
                     network = Adapter.streamNetwork,
                     security = Adapter.streamSecurity,
                     tlsSettings = TlsSettings,
-                    xtlsSettings = XtlsSettings,
                     wsSettings = WsSettings,
-                    httpSettings = HttpSettings,
-                    quicSettings = QuicSettings,
                     grpcSettings = GrpcSettings,
                     tcpSettings = TcpSettings,
                     realitySettings = RealitySettings,
+                    xhttpSettings = XhttpSettings,
+                    hysteriaSettings = HysteriaSettings,
+                    finalmask = FinalMask
                 }
             }
         };
@@ -72,9 +121,17 @@ namespace InvisibleManXRay.Models.Templates.Configs
                 if (Adapter.streamSecurity == Global.StreamSecurity.TLS)
                 {
                     tlsSettings = new V2Ray.StreamSettings.TlsSettings() {
-                        allowInsecure = Adapter.allowInsecure,
                         fingerprint = Adapter.fingerprint
                     };
+
+                    if (!string.IsNullOrWhiteSpace(Adapter.pinnedPeerCertSha256))
+                        tlsSettings.pinnedPeerCertSha256 = Adapter.pinnedPeerCertSha256;
+
+                    if (!string.IsNullOrWhiteSpace(Adapter.verifyPeerCertByName))
+                        tlsSettings.verifyPeerCertByName = Adapter.verifyPeerCertByName;
+
+                    if (!string.IsNullOrWhiteSpace(Adapter.echConfigList))
+                        tlsSettings.echConfigList = Adapter.echConfigList;
 
                     if (!string.IsNullOrWhiteSpace(Adapter.alpn))
                         tlsSettings.alpn = new[] { Adapter.alpn };
@@ -88,30 +145,6 @@ namespace InvisibleManXRay.Models.Templates.Configs
                 }
 
                 return tlsSettings;
-            }
-        }
-
-        private V2Ray.StreamSettings.TlsSettings XtlsSettings
-        {
-            get
-            {
-                V2Ray.StreamSettings.TlsSettings xtlsSettings = null;
-
-                if (Adapter.streamSecurity == Global.StreamSecurity.XTLS)
-                {
-                    xtlsSettings = new V2Ray.StreamSettings.TlsSettings() {
-                        allowInsecure = Adapter.allowInsecure,
-                        alpn = new[] { Adapter.alpn },
-                        fingerprint = Adapter.fingerprint
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(Adapter.sni))
-                        xtlsSettings.serverName = Adapter.sni;
-                    else if (!string.IsNullOrWhiteSpace(Adapter.requestHost))
-                        xtlsSettings.serverName = Adapter.requestHost;
-                }
-
-                return xtlsSettings;
             }
         }
 
@@ -135,47 +168,6 @@ namespace InvisibleManXRay.Models.Templates.Configs
                 }
 
                 return wsSettings;
-            }
-        }
-
-        private V2Ray.StreamSettings.HttpSettings HttpSettings
-        {
-            get
-            {
-                V2Ray.StreamSettings.HttpSettings httpSettings = null;
-
-                if (Adapter.streamNetwork == Global.StreamNetwork.H2)
-                {
-                    httpSettings = new V2Ray.StreamSettings.HttpSettings() {
-                        path = Adapter.path
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(Adapter.requestHost))
-                        httpSettings.host = new[] { Adapter.requestHost };
-                }
-
-                return httpSettings;
-            }
-        }
-
-        private V2Ray.StreamSettings.QuicSettings QuicSettings
-        {
-            get
-            {
-                V2Ray.StreamSettings.QuicSettings quicSettings = null;
-
-                if (Adapter.streamNetwork == Global.StreamNetwork.QUIC)
-                {
-                    quicSettings = new V2Ray.StreamSettings.QuicSettings() {
-                        security = Adapter.requestHost,
-                        key = Adapter.path,
-                        header = new V2Ray.Header() {
-                            type = Adapter.headerType
-                        }
-                    };
-                }
-
-                return quicSettings;
             }
         }
 
@@ -261,9 +253,78 @@ namespace InvisibleManXRay.Models.Templates.Configs
                         shortId = Adapter.shortId,
                         spiderX = Adapter.spiderX
                     };
+
+                    if (!string.IsNullOrWhiteSpace(Adapter.mldsa65Verify))
+                        realitySettings.mldsa65Verify = Adapter.mldsa65Verify;
                 }
 
                 return realitySettings;
+            }
+        }
+
+        private V2Ray.StreamSettings.XhttpSettings XhttpSettings
+        {
+            get
+            {
+                V2Ray.StreamSettings.XhttpSettings xhttpSettings = null;
+
+                if (Adapter.streamNetwork == Global.StreamNetwork.XHTTP)
+                {
+                    xhttpSettings = new V2Ray.StreamSettings.XhttpSettings() {
+                        path = Adapter.path,
+                        mode = Adapter.mode
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(Adapter.requestHost))
+                        xhttpSettings.host = Adapter.requestHost;
+
+                    if (!string.IsNullOrWhiteSpace(Adapter.extra))
+                        xhttpSettings.extra = JsonUtility.ConvertFromJson<JObject>(Adapter.extra);
+                }
+
+                return xhttpSettings;
+            }
+        }
+
+        private V2Ray.StreamSettings.HysteriaSettings HysteriaSettings
+        {
+            get
+            {
+                V2Ray.StreamSettings.HysteriaSettings hysteriaSettings = null;
+
+                if (Adapter.streamNetwork == Global.StreamNetwork.HYSTERIA)
+                {
+                    hysteriaSettings = new V2Ray.StreamSettings.HysteriaSettings() {
+                        version = Adapter.version,
+                        auth = Adapter.id
+                    };
+                }
+
+                return hysteriaSettings;
+            }
+        }
+
+        private V2Ray.StreamSettings.FinalMask FinalMask
+        {
+            get
+            {
+                V2Ray.StreamSettings.FinalMask finalMask = null;
+
+                if (Adapter.obfs == "salamander")
+                {
+                    finalMask = new V2Ray.StreamSettings.FinalMask() {
+                        udp = new V2Ray.StreamSettings.FinalMask.Mask[] {
+                            new V2Ray.StreamSettings.FinalMask.Mask() {
+                                type = Adapter.obfs,
+                                settings = new V2Ray.StreamSettings.FinalMask.Mask.MaskSettings() {
+                                    password = Adapter.obfsPassword
+                                }
+                            }
+                        }
+                    };
+                }
+
+                return finalMask;
             }
         }
     }
